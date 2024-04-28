@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "650089577209",
+    "project_id": "ayo-sehat-3549f",
+    "storage_bucket": "ayo-sehat-3549f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650089577209:android:2fd7d79bc5160accc48028",
+        "android_client_info": {
+          "package_name": "com.example.ayosehat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXrjmVx5xKp3qCL0GBraefuRbGaqh_ap8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
