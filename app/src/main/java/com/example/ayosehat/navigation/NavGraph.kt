@@ -1,11 +1,14 @@
 package com.example.ayosehat.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.ayosehat.screens.Add
 import com.example.ayosehat.screens.BottomNav
+import com.example.ayosehat.screens.ChatGPT
+import com.example.ayosehat.screens.HitungGizi
 import com.example.ayosehat.screens.Home
 import com.example.ayosehat.screens.Login
 import com.example.ayosehat.screens.Notification
@@ -13,6 +16,9 @@ import com.example.ayosehat.screens.Profile
 import com.example.ayosehat.screens.Register
 import com.example.ayosehat.screens.Search
 import com.example.ayosehat.screens.Splash
+import com.example.ayosehat.viewmodel.ChatViewModel
+//import com.example.ayosehat.screens.Welcome
+
 
 @Composable
 fun NavGraph(navController: NavHostController){
@@ -20,6 +26,9 @@ fun NavGraph(navController: NavHostController){
     NavHost(navController = navController,
         startDestination = Routes.Splash.routes){
 
+//        composable(Routes.Welcome.routes){
+//            Welcome(NavController)
+//        }
 
         composable(Routes.Splash.routes){
             Splash(navController)
@@ -30,7 +39,7 @@ fun NavGraph(navController: NavHostController){
         }
 
         composable(Routes.Search.routes){
-            Search()
+            Search(navController)
         }
 
         composable(Routes.Notification.routes){
@@ -41,9 +50,13 @@ fun NavGraph(navController: NavHostController){
             Profile(navController)
         }
 
-        composable(Routes.Search.routes){
-            Search()
+        composable(Routes.ChatGPT.routes){
+            ChatGPT(ChatViewModel())
         }
+
+//        composable(Routes.HitungGizi.routes){
+//            HitungGizi()
+//        }
 
         composable(Routes.Add.routes){
             Add(navController)

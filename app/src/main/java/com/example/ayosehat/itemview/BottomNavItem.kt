@@ -1,4 +1,4 @@
-package com.example.ayosehat.model
+package com.example.ayosehat.itemview
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
