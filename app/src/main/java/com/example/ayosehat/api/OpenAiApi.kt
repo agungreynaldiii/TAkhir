@@ -6,7 +6,8 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 interface OpenAIApi {
-    @Headers("Content-Type: application/json", "Authorization: API key")
+
+    @Headers("Content-Type: application/json", "Authorization: Bearer sk-proj-PXpNom6w36XrHzCGUCvvT3BlbkFJZ7JXrAPO5aHFjwbRTCEp")
     @POST("v1/chat/completions")
     suspend fun generateResponse(@Body requestBody: OpenAIRequestBody): OpenAIResponse
 }
@@ -14,7 +15,7 @@ interface OpenAIApi {
 data class OpenAIRequestBody(
     val model: String = "gpt-3.5-turbo",
     val messages: List<Message>,
-    val max_tokens: Int = 200,
+    val max_tokens: Int = 1000,
     val n: Int = 1,
     val temperature: Double = 1.0
 )

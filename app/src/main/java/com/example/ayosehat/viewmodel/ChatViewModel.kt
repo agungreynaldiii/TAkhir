@@ -1,6 +1,7 @@
 package com.example.ayosehat.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.ayosehat.api.ApiService
@@ -21,7 +22,8 @@ class ChatViewModel : ViewModel() {
             } else {
                 // Jika
                 // n tanggapan default atau tidak melakukan apa-apa
-                println("GAGAL")
+                messages.add(Message("Maaf, kami tidak dapat memahami pesan Anda. Mohon masukkan pesan yang sesuai dengan topik.", "system"))
+
             }
         }
     }

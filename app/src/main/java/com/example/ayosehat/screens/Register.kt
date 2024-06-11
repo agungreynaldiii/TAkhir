@@ -212,7 +212,6 @@ fun Register(navHostController: NavHostController){
         }
 
         TextButton(onClick = {
-
             navHostController.navigate(Routes.Login.routes){
                 popUpTo(navHostController.graph.startDestinationId)
                 launchSingleTop = true
