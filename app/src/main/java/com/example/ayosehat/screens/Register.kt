@@ -19,8 +19,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,103 +47,97 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-//import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
-//import com.example.ayosehat.Manifest
 import com.example.ayosehat.R
 import com.example.ayosehat.navigation.Routes
 import com.example.ayosehat.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Register(navHostController: NavHostController){
+fun Register(navHostController: NavHostController) {
 
-    var email by remember {
-        mutableStateOf("")
-    }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
-    var password by remember {
-        mutableStateOf("")
-    }
-
-    var username by remember {
-        mutableStateOf("")
-    }
-
-    var name by remember {
-        mutableStateOf("")
-    }
-
-    var bio by remember {
-        mutableStateOf("")
-    }
-
-    var imageUri by remember {
-        mutableStateOf<Uri?>(null)
-    }
-
-    val authViewModel : AuthViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
     val firebaseUser by authViewModel.firebaseUser.observeAsState(null)
+    val error by authViewModel.error.observeAsState("")
+    val isLoading by authViewModel.isLoading.observeAsState(false)
 
     val context = LocalContext.current
 
-    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()){
-        uri: Uri? ->
+    val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
         imageUri = uri
     }
 
-    val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+    val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         android.Manifest.permission.READ_MEDIA_IMAGES
-    }else android.Manifest.permission.READ_EXTERNAL_STORAGE
+    } else {
+        android.Manifest.permission.READ_EXTERNAL_STORAGE
+    }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()) {
-
-        isGranted: Boolean ->
-        if (isGranted){
-
-        }else{
-
+    val permissionLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+        if (isGranted) {
+            launcher.launch("image/*")
+        } else {
+            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
         }
     }
 
-    LaunchedEffect(firebaseUser){
-        if (firebaseUser != null){
-            navHostController.navigate(Routes.BottomNav.routes){
+    LaunchedEffect(firebaseUser) {
+        if (firebaseUser != null) {
+            navHostController.navigate(Routes.BottomNav.routes) {
                 popUpTo(navHostController.graph.startDestinationId)
                 launchSingleTop = true
             }
         }
     }
 
-    Column (modifier = Modifier
-        .fillMaxSize()
-        .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center){
+    LaunchedEffect(error) {
+        if (error?.isNotEmpty() == true) {
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            authViewModel.clearError()  // Clear error after showing it once
+        }
+    }
 
-        Text(text = "Register", style = TextStyle(
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 24.sp
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        Text(
+            text = "Register", style = TextStyle(
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 24.sp
             )
         )
 
         Box(modifier = Modifier.height(10.dp))
 
-        Image(painter = if (imageUri == null) painterResource(id = R.drawable.user)
+        Image(
+            painter = if (imageUri == null) painterResource(id = R.drawable.user)
             else rememberAsyncImagePainter(model = imageUri), contentDescription = "User",
             modifier = Modifier
                 .size(85.dp)
                 .clip(CircleShape)
                 .background(Color.LightGray)
                 .clickable {
-
                     val isGranted = ContextCompat.checkSelfPermission(
                         context, permissionToRequest
                     ) == PackageManager.PERMISSION_GRANTED
@@ -147,91 +147,115 @@ fun Register(navHostController: NavHostController){
                     } else {
                         permissionLauncher.launch(permissionToRequest)
                     }
-                }, contentScale = ContentScale.Crop)
+                }, contentScale = ContentScale.Crop
+        )
 
         Box(modifier = Modifier.height(20.dp))
 
-        OutlinedTextField(value = name, onValueChange = {name = it}, label = {
-            Text(text = "Nama")
-        }, keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Text
-        ), singleLine = true,
+        OutlinedTextField(
+            value = name, onValueChange = { name = it }, label = {
+                Text(text = "Nama")
+            }, keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text
+            ), singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-        OutlinedTextField(value = username, onValueChange = {username = it}, label = {
-            Text(text = "Username")
-        }, keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Text
-        ), singleLine = true,
+        OutlinedTextField(
+            value = username, onValueChange = { username = it }, label = {
+                Text(text = "Username")
+            }, keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text
+            ), singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-        OutlinedTextField(value = bio, onValueChange = {bio = it}, label = {
-            Text(text = "Bio")
-        }, keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Text
-        ), singleLine = true,
+        OutlinedTextField(
+            value = bio, onValueChange = { bio = it }, label = {
+                Text(text = "Bio")
+            }, keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text
+            ), singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-        OutlinedTextField(value = email, onValueChange = {email = it}, label = {
-            Text(text = "Email")
-        }, keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email
-        ), singleLine = true,
+        OutlinedTextField(
+            value = email, onValueChange = { email = it }, label = {
+                Text(text = "Email")
+            }, keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email
+            ), singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
 
-//        Box(modifier = Modifier.height(20.dp))
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text(text = "Password") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            singleLine = true,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
 
-        OutlinedTextField(value = password, onValueChange = {password = it}, label = {
-            Text(text = "Password")
-        }, keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Password
-        ), singleLine = true,
+                IconButton(onClick = {
+                    passwordVisible = !passwordVisible
+                }) {
+                    Icon(imageVector = image, contentDescription = "Toggle Password Visibility")
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         )
 
         Box(modifier = Modifier.height(30.dp))
 
-        ElevatedButton(onClick = {
-                                 if (name.isEmpty()||email.isEmpty()||bio.isEmpty()||imageUri == null){
-                                     Toast.makeText(context, "Tidak boleh kosong", Toast.LENGTH_SHORT).show()
-                                 }else{
-                                     authViewModel.register(email, password, name, bio, username, imageUri!!, context)
-                                 }
-
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Register",
-                style = TextStyle(
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp
-                ), modifier = Modifier.padding(vertical = 6.dp)
-            )
+        if (isLoading) {
+            CircularProgressIndicator()
+        } else {
+            ElevatedButton(
+                onClick = {
+                    if (name.isEmpty() || email.isEmpty() || bio.isEmpty() || imageUri == null) {
+                        Toast.makeText(context, "Tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                    } else {
+                        authViewModel.register(email, password, name, bio, username, imageUri!!, context)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Register",
+                    style = TextStyle(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 20.sp
+                    ), modifier = Modifier.padding(vertical = 6.dp)
+                )
+            }
         }
 
-        TextButton(onClick = {
-            navHostController.navigate(Routes.Login.routes){
-                popUpTo(navHostController.graph.startDestinationId)
-                launchSingleTop = true
-            }
+        TextButton(
+            onClick = {
+                navHostController.navigate(Routes.Login.routes) {
+                    popUpTo(navHostController.graph.startDestinationId)
+                    launchSingleTop = true
+                }
 
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Login",
+            }, modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = "Login",
                 style = TextStyle(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 16.sp
                 )
             )
         }
-
     }
 }
 
 @Preview(showBackground = true)
-
 @Composable
-fun RegisterView(){
-//    Register()
+fun RegisterView() {
+    // Register(navHostController) // This line is commented because we can't provide a NavHostController in preview.
 }

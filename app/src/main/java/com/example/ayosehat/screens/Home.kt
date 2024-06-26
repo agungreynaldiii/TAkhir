@@ -27,6 +27,7 @@ import com.example.ayosehat.R
 import com.example.ayosehat.itemview.PostItem
 import com.example.ayosehat.viewmodel.HomeViewModel
 import com.google.firebase.auth.FirebaseAuth
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +36,10 @@ fun Home(navHostController: NavHostController) {
     val homeViewModel: HomeViewModel = viewModel()
     val postAndUsers by homeViewModel.postAndUsers.observeAsState(null)
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    postAndUsers?.let {
+        Log.d("HomeScreen", "Number of posts: ${it.size}")
+    } ?: Log.d("HomeScreen", "postAndUsers is null")
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -46,7 +51,7 @@ fun Home(navHostController: NavHostController) {
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = colorResource(id = R.color.main)// Or use a specific color from your theme
+                        color = colorResource(id = R.color.main)
                     )
                 },
                 scrollBehavior = scrollBehavior
@@ -67,12 +72,4 @@ fun Home(navHostController: NavHostController) {
             }
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ShowHome() {
-    // Consider providing a sample NavHostController or mocking it for the preview
-    Home(navHostController = rememberNavController())
 }

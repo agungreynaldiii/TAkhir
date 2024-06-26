@@ -1,38 +1,15 @@
 package com.example.ayosehat.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallTopAppBar
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +18,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -55,24 +33,17 @@ import com.example.ayosehat.viewmodel.SearchViewModel
 fun Search(navController: NavHostController) {
     val searchViewModel: SearchViewModel = viewModel()
     val foodList by searchViewModel.foodsList.observeAsState(emptyList())
-
     var searchText by remember { mutableStateOf("") }
-    val selectedItems by searchViewModel.selectedFoods.observeAsState(emptyList()) // Amati selectedFoods dari ViewModel
+    val selectedItems by searchViewModel.selectedFoods.observeAsState(emptyList())
 
     Scaffold(
         topBar = {
             SmallTopAppBar(
-                title = { Text("Tambah Makanan", color = Color.White) },
+                title = { Text("Tambah Makanan", color = Color.White, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
                 colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = colorResource(id = R.color.main)),
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) { // Navigate back on click
-                        Icon(Icons.Filled.ArrowBack, "Back", tint = Color.White)
-                    }
-                },
                 actions = {
                     IconButton(
                         onClick = {
-                            // Navigate with the string representation of selected items
                             val selectedFoodsString = selectedItems.filter { it.isSelected }.joinToString(",") {
                                 "${it.nama},${it.kalori},${it.lemak},${it.karbo},${it.protein}"
                             }
@@ -82,16 +53,15 @@ fun Search(navController: NavHostController) {
                         Icon(Icons.Filled.Done, "Checklist", tint = Color.White)
                     }
                 }
-
             )
         }
-    ) {innerPadding ->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            OutlinedTextField( // Search bar
+            OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
                 modifier = Modifier
@@ -102,61 +72,45 @@ fun Search(navController: NavHostController) {
                 leadingIcon = {
                     IconButton(onClick = { /* Handle search action */ }) {
                         Icon(
-                            painter = painterResource(id = R.drawable.search), // Replace with your icon
+                            painter = painterResource(id = R.drawable.search),
                             contentDescription = "Search",
                             tint = Color.Black
                         )
                     }
                 },
-                colors = TextFieldDefaults.textFieldColors() // Use default colors
+                colors = TextFieldDefaults.outlinedTextFieldColors()
             )
 
-            // Add the button to navigate to ImageUploadScreen
+            LazyColumn(modifier = Modifier.weight(1f).fillMaxSize()) {
+                val filteredList = if (searchText.isNotEmpty()) {
+                    foodList.filter { it.nama.lowercase().contains(searchText.lowercase()) }
+                } else {
+                    emptyList()
+                }
+
+                items(filteredList) { currentFood ->
+                    FoodListItem(
+                        food = currentFood,
+                        isSelected = selectedItems.contains(currentFood)
+                    ) { selectedFood ->
+                        if (selectedItems.contains(selectedFood)) {
+                            searchViewModel.removeSelectedFood(selectedFood)
+                        } else {
+                            searchViewModel.addSelectedFood(selectedFood)
+                        }
+                    }
+                }
+            }
+
             Button(
                 onClick = { navController.navigate(Routes.ImageUpload.routes) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
+                    .align(Alignment.CenterHorizontally),
+                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.main))
             ) {
-                Text("Upload Image")
-            }
-
-            // Conditionally show the LazyColumn
-            if (searchText.isNotEmpty()) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    val filteredList = foodList.filter { it.nama.lowercase().contains(searchText.lowercase()) }
-
-                    items(filteredList) { currentFood -> // Rename to avoid shadowing
-                        FoodListItem(
-                            food = currentFood,
-                            isSelected = selectedItems.contains(currentFood)
-                        ) { selectedFood -> // Rename to avoid shadowing
-                            if (selectedItems.contains(selectedFood)) {
-                                searchViewModel.removeSelectedFood(selectedFood) // Panggil fungsi dari viewModel
-                            } else {
-                                searchViewModel.addSelectedFood(selectedFood) // Panggil fungsi dari viewModel
-                            }
-                        }
-                    }
-
-                }
-            }
-            else {
-                if (foodList.isNotEmpty()) { // Jika foodList tidak kosong, tampilkan daftar makanan
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(foodList) { food ->
-                            FoodListItem(food, isSelected = selectedItems.contains(food)) { food ->
-                                if (selectedItems.contains(food)) {
-                                    searchViewModel.removeSelectedFood(food)
-                                } else {
-                                    searchViewModel.addSelectedFood(food)
-                                }
-                            }
-                        }
-                    }
-                } else { // Tampilkan pesan loading atau lainnya jika foodList kosong
-                    Text("Loading...", modifier = Modifier.padding(16.dp))
-                }
+                Text("Upload Image", color = Color.White)
             }
         }
     }
@@ -164,7 +118,7 @@ fun Search(navController: NavHostController) {
 
 @Composable
 fun FoodListItem(food: FoodModel, isSelected: Boolean, onCheckboxClick: (FoodModel) -> Unit) {
-    var isChecked by remember { mutableStateOf(isSelected) } // Use var for mutable state
+    var isChecked by remember { mutableStateOf(isSelected) }
 
     Card(
         modifier = Modifier
@@ -190,10 +144,9 @@ fun FoodListItem(food: FoodModel, isSelected: Boolean, onCheckboxClick: (FoodMod
                 )
             )
 
-            // Create a Row for the nutritional columns
             Row(
-                modifier = Modifier.weight(2f), // Give more weight to the nutrition info
-                horizontalArrangement = Arrangement.SpaceAround // Distribute evenly
+                modifier = Modifier.weight(2f),
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
                 NutritionColumn("Kalori", food.kalori.toString())
                 NutritionColumn("Lemak", food.lemak.toString())
@@ -205,10 +158,14 @@ fun FoodListItem(food: FoodModel, isSelected: Boolean, onCheckboxClick: (FoodMod
                 checked = isChecked,
                 onCheckedChange = {
                     isChecked = it
-                    food.isSelected = isChecked // Update the food item's isSelected property
+                    food.isSelected = isChecked
                     onCheckboxClick(food)
-                },// Let the row handle the click
-                colors = CheckboxDefaults.colors(checkedColor = Color.White)
+                },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = Color.White,
+                    uncheckedColor = Color.White,
+                    checkmarkColor = Color.Black
+                )
             )
         }
     }

@@ -9,8 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +33,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,16 +45,16 @@ import com.example.ayosehat.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Login(navController: NavHostController){
+fun Login(navController: NavHostController) {
 
     val authViewModel: AuthViewModel = viewModel()
     val firebaseUser by authViewModel.firebaseUser.observeAsState()
     val error by authViewModel.error.observeAsState()
+    val isLoading by authViewModel.isLoading.observeAsState(false)
 
-
-    LaunchedEffect(firebaseUser){
-        if (firebaseUser != null){
-            navController.navigate(Routes.BottomNav.routes){
+    LaunchedEffect(firebaseUser) {
+        if (firebaseUser != null) {
+            navController.navigate(Routes.BottomNav.routes) {
                 popUpTo(navController.graph.startDestinationId)
                 launchSingleTop = true
             }
@@ -55,8 +63,11 @@ fun Login(navController: NavHostController){
 
     val context = LocalContext.current
 
-    error?.let{
-        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(error) {
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            authViewModel.clearError()
+        }
     }
 
     var email by remember {
@@ -67,12 +78,15 @@ fun Login(navController: NavHostController){
         mutableStateOf("")
     }
 
-    
-    Column (modifier = Modifier
-        .fillMaxSize()
-        .padding(24.dp),
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center){
+        verticalArrangement = Arrangement.Center
+    ) {
 
         Text(text = "Login", style = TextStyle(
             fontWeight = FontWeight.ExtraBold,
@@ -81,40 +95,61 @@ fun Login(navController: NavHostController){
 
         Box(modifier = Modifier.height(30.dp))
 
-        OutlinedTextField(value = email, onValueChange = {email = it}, label = {
-            Text(text = "Email")
-        }, keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email
-        ), singleLine = true,
-        modifier = Modifier.fillMaxWidth()
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = { Text(text = "Email") },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email
+            ),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
         )
 
         Box(modifier = Modifier.height(20.dp))
 
-        OutlinedTextField(value = password, onValueChange = {password = it}, label = {
-            Text(text = "Password")
-        }, keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Password
-        ), singleLine = true,
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text(text = "Password") },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password
+            ),
+            singleLine = true,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, "")
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         )
 
         Box(modifier = Modifier.height(30.dp))
 
-        ElevatedButton(onClick = {
-
-            if (email.isEmpty()||password.isEmpty()){
-                Toast.makeText(context, "Tidak boleh kosong", Toast.LENGTH_SHORT).show()
-            }else
-                authViewModel.login(email, password, context)
-
-        }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Login",
-                style = TextStyle(
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp
-                ), modifier = Modifier.padding(vertical = 6.dp)
-            )
+        if (isLoading) {
+            CircularProgressIndicator()
+        } else {
+            ElevatedButton(onClick = {
+                if (email.isEmpty() || password.isEmpty()) {
+                    Toast.makeText(context, "Tidak boleh kosong", Toast.LENGTH_SHORT).show()
+                } else {
+                    authViewModel.login(email, password, context)
+                }
+            }, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Login",
+                    style = TextStyle(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 20.sp
+                    ),
+                    modifier = Modifier.padding(vertical = 6.dp)
+                )
+            }
         }
 
         TextButton(onClick = {
@@ -123,7 +158,8 @@ fun Login(navController: NavHostController){
                 launchSingleTop = true
             }
         }, modifier = Modifier.fillMaxWidth()) {
-            Text(text = "Buat Akun",
+            Text(
+                text = "Buat Akun",
                 style = TextStyle(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 16.sp
@@ -135,8 +171,7 @@ fun Login(navController: NavHostController){
 }
 
 @Preview(showBackground = true)
-
 @Composable
-fun LoginView(){
-//    Login()
+fun LoginView() {
+    // This is only for preview purpose
 }

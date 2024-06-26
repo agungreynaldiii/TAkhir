@@ -14,6 +14,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import java.util.UUID
+import android.util.Log
 
 class HomeViewModel : ViewModel() {
 
@@ -25,20 +26,20 @@ class HomeViewModel : ViewModel() {
 
     init {
         fetchPostAndUsers {
+            Log.d("HomeViewModel", "Fetched posts and users: $it")
             _postAndUsers.value = it
         }
     }
 
     private fun fetchPostAndUsers(onResult: (List<Pair<PostModel, UserModel>>) -> Unit){
-        post.addValueEventListener(object : ValueEventListener{
+        post.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
 
                 val result = mutableListOf<Pair<PostModel, UserModel>>()
                 for (postSnapshot in snapshot.children){
                     val post = postSnapshot.getValue(PostModel::class.java)
-                    post.let{
-                        fetchUserFromPost(it!!){
-                            user ->
+                    post?.let {
+                        fetchUserFromPost(it) { user ->
                             result.add(0, it to user)
 
                             if (result.size == snapshot.childrenCount.toInt()){
@@ -50,26 +51,22 @@ class HomeViewModel : ViewModel() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
+                Log.e("HomeViewModel", "Database error: ${error.message}")
             }
-
         })
     }
 
     fun fetchUserFromPost(post: PostModel, onResult: (UserModel) -> Unit){
         db.getReference("users").child(post.userId)
-            .addListenerForSingleValueEvent(object : ValueEventListener{
+            .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-
                     val user = snapshot.getValue(UserModel::class.java)
                     user?.let(onResult)
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-
+                    Log.e("HomeViewModel", "Database error: ${error.message}")
                 }
-
             })
     }
-
 }

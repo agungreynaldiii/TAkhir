@@ -62,7 +62,7 @@ fun BottomNav(navController: NavHostController){
         }
 
         composable(Routes.ChatGPT.routes){
-            ChatGPT(ChatViewModel())
+            ChatGPT(ChatViewModel(), navController)
         }
 
 //        composable(Routes.HitungGizi.routes){

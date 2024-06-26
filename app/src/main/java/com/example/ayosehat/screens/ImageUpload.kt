@@ -20,19 +20,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.TabRowDefaults.Divider
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.tooling.data.EmptyGroup.data
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -56,10 +45,9 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.example.ayosehat.api.ApiService
 import com.example.ayosehat.api.MlApiService
-import com.google.common.collect.Table
 import java.io.File
-import java.time.format.TextStyle
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ImageUpload(navController: NavController) {
@@ -119,8 +107,11 @@ fun ImageUpload(navController: NavController) {
             }
 
             // Image selection button
-            Button(onClick = { launcher.launch("image/*") }) {
-                Text("Select Image")
+            Button(
+                onClick = { launcher.launch("image/*") },
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Select Image", color = Color.White)
             }
 
             // Image preview
@@ -132,34 +123,37 @@ fun ImageUpload(navController: NavController) {
             }
 
             // Upload button
-            Button(onClick = {
-                imageFile?.let { file ->
-                    isLoading = true
-                    error = null
+            Button(
+                onClick = {
+                    imageFile?.let { file ->
+                        isLoading = true
+                        error = null
 
-                    Log.d(TAG, "Uploading image: ${file.path}")
+                        Log.d(TAG, "Uploading image: ${file.path}")
 
-                    MlApiService.uploadImage(file) { detectedImgPath, detectedLabels, detectedFoodInfos ->
-                        isLoading = false
-                        if (detectedImgPath != null && detectedLabels != null && detectedFoodInfos != null) {
-                            uploadedImageUrl = detectedImgPath
-                            labels = detectedLabels
-                            foodInfos = detectedFoodInfos
-                            Log.d(TAG, "Image uploaded successfully: $uploadedImageUrl")
-                            Log.d(TAG, "Detected labels: $labels")
-                        } else {
-                            error = "Failed to upload image"
-                            Log.e(TAG, error!!)
+                        MlApiService.uploadImage(file) { detectedImgPath, detectedLabels, detectedFoodInfos ->
+                            isLoading = false
+                            if (detectedImgPath != null && detectedLabels != null && detectedFoodInfos != null) {
+                                uploadedImageUrl = detectedImgPath
+                                labels = detectedLabels
+                                foodInfos = detectedFoodInfos
+                                Log.d(TAG, "Image uploaded successfully: $uploadedImageUrl")
+                                Log.d(TAG, "Detected labels: $labels")
+                            } else {
+                                error = "Failed to upload image"
+                                Log.e(TAG, error!!)
+                            }
                         }
                     }
-                }
-            }) {
-                Text("Upload Image")
+                },
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Detect", color = Color.White)
             }
 
             // Loading state
             if (isLoading) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
 
             // Error state
@@ -171,7 +165,7 @@ fun ImageUpload(navController: NavController) {
             uploadedImageUrl?.let { url ->
                 Image(
                     painter = rememberAsyncImagePainter(url),
-                    contentDescription = "Uploaded Image",
+                    contentDescription = "Detected Image",
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(150.dp)
@@ -191,7 +185,12 @@ fun ImageUpload(navController: NavController) {
 
         // TopAppBar
         TopAppBar(
-            title = { Text("Image Upload") },
+            title = { Text("Image Upload", color = Color.White) },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = Color.White,
+                actionIconContentColor = Color.White
+            ),
             actions = {
                 IconButton(onClick = { navController.navigateUp() }) {
                     Icon(Icons.Outlined.Check, contentDescription = "Check")
